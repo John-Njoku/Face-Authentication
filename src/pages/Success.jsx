@@ -1,6 +1,6 @@
 // src/pages/Success.jsx
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -9,13 +9,18 @@ const Success = () => {
   const [userName, setUserName] = useState('');
   const auth = getAuth();
   const user = auth.currentUser;
+  const navigate = useNavigate(); // Use navigate hook for programmatic navigation
 
   useEffect(() => {
     const fetchUserName = async () => {
       if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserName(userDoc.data().fullName);
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setUserName(userDoc.data().fullName);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
         }
       }
     };
@@ -26,13 +31,17 @@ const Success = () => {
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        // Redirect to the home page or sign-in page after sign out
+        // Redirect to the home page after sign out
         window.location.href = '/';
       })
       .catch((error) => {
-        // Handle errors here if needed
         console.error('Sign out error:', error);
       });
+  };
+
+  const handleDashboardRedirect = () => {
+    console.log('Redirecting to dashboard...');
+    navigate('/dashboard'); // Programmatically navigate to the dashboard
   };
 
   return (
@@ -45,12 +54,12 @@ const Success = () => {
           Welcome back, {userName || 'User'}! You have successfully logged in.
         </p>
         <div className="flex flex-col gap-4">
-          <Link
-            /*to="/dashboard"*/
+          <button
+            onClick={handleDashboardRedirect}
             className="py-3 px-6 rounded-md bg-indigo-500 text-white text-lg font-semibold shadow-md hover:bg-green-600 transition duration-300"
           >
             Go to Dashboard
-          </Link>
+          </button>
           <button
             onClick={handleSignOut}
             className="py-3 px-6 rounded-md bg-yellow-500 text-white text-lg font-semibold shadow-md hover:bg-red-600 transition duration-300"

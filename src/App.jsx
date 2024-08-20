@@ -7,7 +7,8 @@ import UserSelect from "./pages/UserSelect";
 import Registration from "./pages/Registration";
 import Success from "./pages/Success";
 import Login from "./pages/Login";
-
+import Dashboard from "./pages/Dashboard"; // Ensure this is correctly imported
+import ErrorBoundary from "./components/ErrorBoundary"; // Import the ErrorBoundary
 
 function App() {
   return (
@@ -18,8 +19,12 @@ function App() {
           <Route path="/user-select" element={<UserSelect />} />
           <Route path="/registration" element={<Registration />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={
+            <ErrorBoundary>
+              <Dashboard />
+            </ErrorBoundary>
+          } />
           <Route path="/success" element={<Success />} />
-          
           <Route path="*" element={<NotFound />} /> {/* 404 route */}
         </Routes>
       </div>

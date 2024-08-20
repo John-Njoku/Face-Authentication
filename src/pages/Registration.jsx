@@ -82,6 +82,17 @@ const Registration = () => {
   const handleRegistration = async (e) => {
     e.preventDefault();
 
+    // Validate that all fields are filled
+    if (!fullName.trim()) {
+      alert('Please enter your full name.');
+      return;
+    }
+
+    if (!email.trim()) {
+      alert('Please enter your email address.');
+      return;
+    }
+
     if (!faceDescriptor) {
       alert('Please capture your face before registering.');
       return;

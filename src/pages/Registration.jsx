@@ -1,3 +1,4 @@
+// src/pages/Registration.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -9,12 +10,11 @@ const Registration = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [faceDescriptor, setFaceDescriptor] = useState(null);
   const [loading, setLoading] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef();
   const streamRef = useRef(null);
-  const [faceDescriptor, setFaceDescriptor] = useState(null);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -73,7 +73,8 @@ const Registration = () => {
       return;
     }
 
-    setFaceDescriptor(Array.from(detections.descriptor)); // Save face descriptor for later use
+    const normalizedDescriptor = detections.descriptor.map(value => parseFloat(value.toFixed(5)));
+    setFaceDescriptor(Array.from(normalizedDescriptor)); // Convert Float32Array to regular array for Firestore
     alert('Face captured successfully!');
     stopVideoStream();
   };
@@ -88,7 +89,8 @@ const Registration = () => {
 
     try {
       setLoading(true);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, email); // using email as a password placeholder
       const user = userCredential.user;
 
       // Save user data to Firestore
@@ -96,7 +98,7 @@ const Registration = () => {
         uid: user.uid,
         fullName,
         email,
-        faceDescriptor, // Store the captured face descriptor
+        faceDescriptor, // Store the face descriptor as an array
       });
 
       alert('Registration successful! Redirecting to login...');
@@ -134,17 +136,6 @@ const Registration = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </label>
-          <label className="flex flex-col">
-            <span className="text-gray-700 font-semibold mb-1">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
               className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />

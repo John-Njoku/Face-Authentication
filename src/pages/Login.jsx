@@ -1,6 +1,7 @@
+// src/pages/Login.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { sendSignInLinkToEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import * as faceapi from 'face-api.js';
@@ -8,10 +9,9 @@ import * as faceapi from 'face-api.js';
 const Login = () => {
   const navigate = useNavigate();
   const videoRef = useRef();
-  const streamRef = useRef(null);
   const [loading, setLoading] = useState(false);
-  const [buttonText, setButtonText] = useState('Scan Your Face');
   const [cameraActive, setCameraActive] = useState(false);
+  const streamRef = useRef(null);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -41,12 +41,8 @@ const Login = () => {
       .then((stream) => {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
-        setCameraActive(true);
       })
-      .catch((err) => {
-        console.error('Error accessing webcam:', err);
-        alert('Error accessing webcam. Please ensure your camera is connected and permissions are granted.');
-      });
+      .catch((err) => console.error('Error accessing webcam:', err));
   };
 
   const stopVideoStream = () => {
@@ -58,8 +54,11 @@ const Login = () => {
   };
 
   const handleFaceLogin = async () => {
-    setButtonText('Detecting Face...');
-    setLoading(true);
+    if (!cameraActive) {
+      setCameraActive(true);
+      startVideo();
+      return;
+    }
 
     try {
       const detections = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
@@ -69,12 +68,10 @@ const Login = () => {
       if (!detections) {
         alert('No face detected. Please try again.');
         stopVideoStream();
-        setButtonText('Scan Your Face');
-        setLoading(false);
         return;
       }
 
-      const currentDescriptor = detections.descriptor;
+      const currentDescriptor = detections.descriptor.map(value => parseFloat(value.toFixed(5)));
 
       // Fetch all users and their descriptors from Firestore
       const querySnapshot = await getDocs(collection(db, 'users'));
@@ -83,51 +80,29 @@ const Login = () => {
 
       querySnapshot.forEach((doc) => {
         const userDoc = doc.data();
-        if (userDoc.faceDescriptor) {
-          const savedDescriptor = new Float32Array(userDoc.faceDescriptor);
-          const distance = faceapi.euclideanDistance(savedDescriptor, currentDescriptor);
+        const savedDescriptor = new Float32Array(userDoc.faceDescriptor);
+        const distance = faceapi.euclideanDistance(savedDescriptor, currentDescriptor);
 
-          if (distance < minDistance) {
-            minDistance = distance;
-            matchedUser = userDoc;
-          }
+        console.log('Distance with User:', distance);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          matchedUser = userDoc;
         }
       });
 
-      if (matchedUser && minDistance < 0.6) {
-        setButtonText('Scan Finished');
+      if (matchedUser && minDistance < 0.6) { // Threshold for matching
+        await signInWithEmailAndPassword(auth, matchedUser.email, matchedUser.email); // using email as password
         stopVideoStream();
-
-        const actionCodeSettings = {
-          url: 'https://face-authentication-2428e.web.app/finish-sign-in', // Replace with your actual production URL
-          handleCodeInApp: true,
-        };
-
-        window.localStorage.setItem('emailForSignIn', matchedUser.email);
-
-        await sendSignInLinkToEmail(auth, matchedUser.email, actionCodeSettings);
-        alert(`A sign-in link has been sent to ${matchedUser.email}. Please check your email to complete the sign-in process.`);
-        navigate('/check-email');
+        navigate('/success');
       } else {
         alert('No matching face found. Please try again.');
         stopVideoStream();
-        setButtonText('Scan Your Face');
-        setLoading(false);
       }
     } catch (error) {
       console.error('Error during face login:', error);
       alert('An error occurred during login. Please try again.');
       stopVideoStream();
-      setButtonText('Scan Your Face');
-      setLoading(false);
-    }
-  };
-
-  const handleScanClick = () => {
-    if (!cameraActive) {
-      startVideo();
-    } else {
-      handleFaceLogin();
     }
   };
 
@@ -139,13 +114,15 @@ const Login = () => {
         </h1>
         <div className="mt-6 flex flex-col items-center">
           <p className="text-gray-700">Sign in using your face:</p>
-          <video ref={videoRef} autoPlay muted className="w-32 h-32 mt-4 rounded-full border-2 border-indigo-500"></video>
+          {cameraActive && (
+            <video ref={videoRef} autoPlay muted className="w-32 h-32 mt-4 rounded-full border-2 border-indigo-500"></video>
+          )}
           <button
-            onClick={handleScanClick}
-            className={`mt-4 py-3 px-6 rounded-full text-white text-lg font-semibold shadow-lg ${loading ? 'bg-gray-400' : 'bg-indigo-500'}`}
+            onClick={handleFaceLogin}
+            className="mt-4 py-3 px-6 rounded-full bg-indigo-500 text-white text-lg font-semibold shadow-lg hover:bg-indigo-600"
             disabled={loading}
           >
-            {buttonText}
+            {cameraActive ? 'Scan Your Face' : 'Activate Camera'}
           </button>
         </div>
         {/* Link to go back to user selection */}

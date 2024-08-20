@@ -1,23 +1,23 @@
-// src/pages/Success.jsx
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import necessary hooks from react-router-dom
 import { getAuth, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const Success = () => {
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState(''); // State to store the user's name
   const auth = getAuth();
-  const user = auth.currentUser;
-  const navigate = useNavigate(); // Use navigate hook for programmatic navigation
+  const user = auth.currentUser; // Get the currently authenticated user
+  const navigate = useNavigate(); // Hook to programmatically navigate to other routes
 
   useEffect(() => {
+    // Function to fetch the user's name from Firestore
     const fetchUserName = async () => {
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userDoc = await getDoc(doc(db, 'users', user.uid)); // Get the user's document from Firestore
           if (userDoc.exists()) {
-            setUserName(userDoc.data().fullName);
+            setUserName(userDoc.data().fullName); // Set the user's name in state
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -25,9 +25,10 @@ const Success = () => {
       }
     };
 
-    fetchUserName();
+    fetchUserName(); // Call the function to fetch the user's name
   }, [user]);
 
+  // Function to handle user sign out
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
@@ -39,6 +40,7 @@ const Success = () => {
       });
   };
 
+  // Function to navigate to the dashboard
   const handleDashboardRedirect = () => {
     console.log('Redirecting to dashboard...');
     navigate('/dashboard'); // Programmatically navigate to the dashboard
@@ -54,12 +56,14 @@ const Success = () => {
           Welcome back, {userName || 'User'}! You have successfully logged in.
         </p>
         <div className="flex flex-col gap-4">
+          {/* Button to go to the dashboard */}
           <button
             onClick={handleDashboardRedirect}
             className="py-3 px-6 rounded-md bg-indigo-500 text-white text-lg font-semibold shadow-md hover:bg-green-600 transition duration-300"
           >
             Go to Dashboard
           </button>
+          {/* Button to sign out */}
           <button
             onClick={handleSignOut}
             className="py-3 px-6 rounded-md bg-yellow-500 text-white text-lg font-semibold shadow-md hover:bg-red-600 transition duration-300"

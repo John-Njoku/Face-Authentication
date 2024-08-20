@@ -1,4 +1,3 @@
-// src/pages/Registration.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -8,15 +7,16 @@ import * as faceapi from 'face-api.js';
 
 const Registration = () => {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [faceDescriptor, setFaceDescriptor] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [cameraActive, setCameraActive] = useState(false);
-  const videoRef = useRef();
-  const streamRef = useRef(null);
+  const [fullName, setFullName] = useState(''); // State to track the user's full name
+  const [email, setEmail] = useState(''); // State to track the user's email address
+  const [faceDescriptor, setFaceDescriptor] = useState(null); // State to store the captured face descriptor
+  const [loading, setLoading] = useState(false); // State to manage loading state during registration
+  const [cameraActive, setCameraActive] = useState(false); // State to track if the camera is active
+  const videoRef = useRef(); // Ref to the video element
+  const streamRef = useRef(null); // Ref to the media stream
 
   useEffect(() => {
+    // Function to load face-api.js models when the component mounts
     const loadModels = async () => {
       setLoading(true);
       try {
@@ -34,11 +34,13 @@ const Registration = () => {
 
     loadModels();
 
+    // Clean up function to stop video stream when the component unmounts
     return () => {
       stopVideoStream();
     };
   }, []);
 
+  // Function to start the video stream
   const startVideo = () => {
     navigator.mediaDevices.getUserMedia({ video: {} })
       .then((stream) => {
@@ -48,6 +50,7 @@ const Registration = () => {
       .catch((err) => console.error('Error accessing webcam:', err));
   };
 
+  // Function to stop the video stream
   const stopVideoStream = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -56,6 +59,7 @@ const Registration = () => {
     }
   };
 
+  // Function to capture the face descriptor using face-api.js
   const captureFaceDescriptor = async () => {
     if (!cameraActive) {
       setCameraActive(true);
@@ -73,12 +77,14 @@ const Registration = () => {
       return;
     }
 
+    // Normalize the face descriptor and store it
     const normalizedDescriptor = detections.descriptor.map(value => parseFloat(value.toFixed(5)));
     setFaceDescriptor(Array.from(normalizedDescriptor)); // Convert Float32Array to regular array for Firestore
     alert('Face captured successfully!');
     stopVideoStream();
   };
 
+  // Function to handle the registration process
   const handleRegistration = async (e) => {
     e.preventDefault();
 
@@ -101,6 +107,7 @@ const Registration = () => {
     try {
       setLoading(true);
 
+      // Create a new user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, email); // using email as a password placeholder
       const user = userCredential.user;
 
@@ -128,6 +135,7 @@ const Registration = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-6 text-center">
           Register Your Account
         </h1>
+        {/* Form to handle user input and registration */}
         <form className="flex flex-col gap-4" onSubmit={handleRegistration}>
           <label className="flex flex-col">
             <span className="text-gray-700 font-semibold mb-1">Full Name</span>

@@ -1,24 +1,31 @@
-// src/pages/Home.jsx
 import React from 'react';
-import { Link } from 'react-router-dom'; // Import Link
+import { Link } from 'react-router-dom'; // Import Link for client-side navigation
 
 const Home = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white">
+      {/* Main content container centered on the screen */}
       <div className='flex flex-col items-center justify-center mt-6'>
+        {/* Welcome heading with dynamic styling */}
         <h1 className="text-black text-4xl md:text-6xl font-extrabold mb-4 text-center">
           <span className="block">Welcome to</span>
+          {/* Text with gradient background for visual emphasis */}
           <span className="bg-gradient-to-r from-indigo-500 to-indigo-800 text-transparent bg-clip-text">
             Face Authentication Web App
           </span>
         </h1>
+        
+        {/* Description of the service */}
         <p className="text-lg md:text-xl text-center max-w-md mt-10 text-gray-700">
           Experience the future of authentication. Your face is your key—unlock secure and seamless access like never before.
         </p>
+        
+        {/* Call-to-Action button linking to the user selection page */}
         <Link
           to="/user-select"
           className="flex items-center gap-2 mt-12 w-fit mx-auto cursor-pointer z-10 py-3 px-6 rounded-full bg-gradient-to-r from-indigo-300 to-indigo-500"
         >
+          {/* SVG icon to enhance button visual appeal */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

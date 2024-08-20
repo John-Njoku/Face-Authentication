@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
@@ -7,10 +6,11 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Import updateDoc
 import { db } from '../firebase'; 
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null); 
-  const [loading, setLoading] = useState(true); 
-  const [photoURL, setPhotoURL] = useState('https://via.placeholder.com/150'); 
+  const [user, setUser] = useState(null); // State to store user data
+  const [loading, setLoading] = useState(true); // State to track loading status
+  const [photoURL, setPhotoURL] = useState('https://via.placeholder.com/150'); // State for user's profile photo
 
+  // Fetch user data from Firestore when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       const auth = getAuth();
@@ -37,6 +37,7 @@ const Dashboard = () => {
     fetchUserData();
   }, []);
 
+  // Function to sign out the user
   const handleSignOut = () => {
     const auth = getAuth();
     signOut(auth)
@@ -48,6 +49,7 @@ const Dashboard = () => {
       });
   };
 
+  // Function to handle profile photo upload
   const handlePhotoUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -71,6 +73,7 @@ const Dashboard = () => {
     }
   };
 
+  // Conditional rendering for loading state and user data availability
   if (loading) {
     return <p>Loading...</p>;
   }

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAuth, signOut } from 'firebase/auth';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
-import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Import updateDoc from Firestore
-import { db } from '../firebase'; 
+import { getAuth, signOut, deleteUser } from 'firebase/auth';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore'; // Import updateDoc and deleteDoc from Firestore
+import { db } from '../firebase';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null); // State to store user data
@@ -73,6 +73,36 @@ const Dashboard = () => {
     }
   };
 
+  // Function to handle account deletion
+  const handleDeleteAccount = async () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      try {
+        const auth = getAuth();
+        const storage = getStorage();
+        const currentUser = auth.currentUser;
+
+        // Delete the user's data from Firestore
+        await deleteDoc(doc(db, 'users', currentUser.uid));
+        console.log('User data deleted from Firestore.');
+
+        // Delete the user's profile photo from Firebase Storage (if exists)
+        const photoRef = ref(storage, `users/${currentUser.uid}/profile.jpg`);
+        await deleteObject(photoRef);
+        console.log('User profile photo deleted from Storage.');
+
+        // Delete the user's authentication account
+        await deleteUser(currentUser);
+        console.log('User account deleted from Authentication.');
+
+        // Redirect to home page
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Error deleting user account:', error);
+        alert('Failed to delete account. Please try again.');
+      }
+    }
+  };
+
   // Conditional rendering for loading state and user data availability
   if (loading) {
     return <p>Loading...</p>;
@@ -132,6 +162,14 @@ const Dashboard = () => {
                     <p><strong>Address:</strong> {user.address}</p>
                   </div>
                 </div>
+              </div>
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={handleDeleteAccount}
+                  className="py-3 px-6 rounded-md bg-red-500 text-white text-lg font-semibold shadow-md hover:bg-red-700"
+                >
+                  Delete My Account
+                </button>
               </div>
             </div>
           </div>
